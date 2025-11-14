@@ -49,6 +49,7 @@ async function fetchWithTimeout(url, options = {}, timeout = 10000) {
 // 5️⃣ Config Uptime Monitor
 let lastUpTime = null;
 let lastStatus = null;
+let lastStatusMessage = null; // 🆕 ultimul mesaj trimis
 const STATUS_CHANNEL_ID = "1436098432413597726";
 const MAIN_SITE_URL = "https://www.logged.tg/auth/corrupteds";
 const MAIN_SITE_NAME = "CORRUPTEDS";
@@ -75,6 +76,12 @@ setInterval(async () => {
     if (currentStatus !== lastStatus) {
       const channel = client.channels.cache.get(STATUS_CHANNEL_ID);
       if (channel) {
+
+        // 🆕 Șterge mesajul anterior dacă există
+        if (lastStatusMessage) {
+          try { await lastStatusMessage.delete().catch(() => {}); } catch {}
+        }
+
         const embed = new EmbedBuilder()
           .setColor(0x00BFFF)
           .setThumbnail("https://cdn.discordapp.com/emojis/1437165310775132160.gif")
@@ -87,8 +94,13 @@ setInterval(async () => {
           .setImage("https://i.imgur.com/rCQ33gA.gif")
           .setFooter({ text: "Site Uptime Monitor" });
 
-        await channel.send({ embeds: [embed] });
+        // 🆕 Trimite cu @everyone + salvează mesajul
+        lastStatusMessage = await channel.send({ 
+          content: "@everyone", 
+          embeds: [embed] 
+        });
       }
+
       lastStatus = currentStatus;
     }
 
